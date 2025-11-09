@@ -826,8 +826,12 @@ const handleMessageLogsCommand = async (bot, msg) => {
       return;
     }
     
-    // Tạo URL website
-    const serverUrl = process.env.SERVER_URL || 'https://your-server.com';
+    // Tạo URL website - tự động sử dụng port 3004 nếu SERVER_URL không được thiết lập
+    let serverUrl = process.env.SERVER_URL;
+    if (!serverUrl) {
+      const port = process.env.PORT || 3004;
+      serverUrl = `http://localhost:${port}`;
+    }
     const websiteUrl = `${serverUrl}/messagelogs`;
     
     // Tạo message với link

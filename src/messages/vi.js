@@ -3,10 +3,10 @@ module.exports = {
   welcome: "Chào mừng {name} tham gia nhóm! 🎉",
   error: "Đã xảy ra lỗi. Vui lòng thử lại sau.",
   processing: "⏳ Đang xử lý...",
-  noPermission: "",
-  ownerOnly: "",
-  adminOnly: "",
-  operatorOnly: "",
+  noPermission: "❌ Bạn không có quyền thực hiện lệnh này.",
+  ownerOnly: "❌ Chỉ chủ sở hữu mới có quyền thực hiện lệnh này.",
+  adminOnly: "❌ Chỉ quản trị viên mới có quyền thực hiện lệnh này.",
+  operatorOnly: "❌ Chỉ điều hành viên mới có quyền thực hiện lệnh này.",
 
   // Thông báo lỗi
   errorProcessingMessage: "Xử lý tin nhắn bị lỗi",
@@ -27,8 +27,8 @@ module.exports = {
 
   // Thông báo quyền
   permissionMessages: {
-    owner: "",
-    admin: "",
-    operator: ""
+    owner: "❌ Chỉ chủ sở hữu mới có quyền thực hiện lệnh này.",
+    admin: "❌ Chỉ quản trị viên mới có quyền thực hiện lệnh này.",
+    operator: "❌ Chỉ điều hành viên mới có quyền thực hiện lệnh này."
   }
 }; 
