@@ -3760,8 +3760,10 @@ app.get('/messagelogs/:chatId', async (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3004;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0'; // Listen on all interfaces to allow external access
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
+  console.log(`Access Message Logs at: http://${HOST}:${PORT}/messagelogs`);
   console.log('Bot started polling for updates');
 });
 
