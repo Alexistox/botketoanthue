@@ -24,13 +24,38 @@ const cache = new NodeCache({ stdTTL: 21600 }); // Cache in 6 hours
 const app = express();
 app.use(express.json());
 
-// Kết nối MongoDB
-connectDB();
-
 // Khởi tạo Telegram Bot
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const bot = new TelegramBot(token, { polling: true });
 const messages = require('./src/messages/vi');
+
+// Hàm khởi động server sau khi MongoDB đã kết nối
+const startServer = async () => {
+  try {
+    // Đợi MongoDB kết nối trước
+    await connectDB();
+    console.log('✅ MongoDB connected successfully');
+    
+    // Sau khi MongoDB kết nối, mới khởi động Express server
+    const PORT = process.env.PORT || 3004;
+    const HOST = process.env.HOST || '0.0.0.0';
+    
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 Server running on http://${HOST}:${PORT}`);
+      console.log(`📊 Access Message Logs at: http://${HOST}:${PORT}/messagelogs`);
+      console.log(`🔗 API endpoint: http://${HOST}:${PORT}/api/messagelogs`);
+      console.log('🤖 Bot started polling for updates');
+      console.log(`📦 MongoDB URI: ${process.env.MONGODB_URI ? 'Connected' : 'Not configured'}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    console.error('Error details:', error.message);
+    process.exit(1);
+  }
+};
+
+// Khởi động server
+startServer();
 
 // Xử lý tin nhắn
 bot.on('message', async (msg) => {
@@ -122,6 +147,15 @@ app.get('/api/groups', async (req, res) => {
 // API endpoint để lấy thông tin message logs của các nhóm
 app.get('/api/messagelogs', async (req, res) => {
   try {
+    // Kiểm tra kết nối MongoDB
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB not connected. State:', mongoose.connection.readyState);
+      return res.status(500).json({
+        success: false,
+        message: 'MongoDB chưa kết nối. Vui lòng kiểm tra kết nối database.'
+      });
+    }
+    
     // Lấy danh sách các chatId có message logs
     const messageLogs = await MessageLog.aggregate([
       {
@@ -134,6 +168,8 @@ app.get('/api/messagelogs', async (req, res) => {
         }
       }
     ]);
+    
+    console.log(`[API] Found ${messageLogs.length} groups with message logs`);
     
     const groupsWithMessageLogs = await Promise.all(
       messageLogs.map(async (logGroup) => {
@@ -171,9 +207,11 @@ app.get('/api/messagelogs', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching message logs:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Lỗi khi lấy thông tin message logs'
+      message: 'Lỗi khi lấy thông tin message logs',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
@@ -3758,14 +3796,7 @@ app.get('/messagelogs/:chatId', async (req, res) => {
   `);
 });
 
-// Start server
-const PORT = process.env.PORT || 3004;
-const HOST = process.env.HOST || '0.0.0.0'; // Listen on all interfaces to allow external access
-app.listen(PORT, HOST, () => {
-  console.log(`Server running on http://${HOST}:${PORT}`);
-  console.log(`Access Message Logs at: http://${HOST}:${PORT}/messagelogs`);
-  console.log('Bot started polling for updates');
-});
+// Server sẽ được khởi động trong hàm startServer() sau khi MongoDB kết nối
 
 // Xử lý lỗi không bắt được
 process.on('unhandledRejection', (error) => {
